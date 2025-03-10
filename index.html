@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
+
+    <title>Gozar Pingilish</title>
+  </head>
+
+  <body data-theme="dark">
+    <div class="w-[100vw] h-[100vh] flex flex-col items-center justify-center">
+      <div class="text-4xl font-bold mb-4">GOZAR PINGILISH</div>
+      <div
+        class="card bg-base-300 w-96 shadow-sm text-white p-5"
+        x-data="clipboard()"
+      >
+        <label class="input w-full">
+          <input
+            type="text"
+            x-model="text"
+            class="grow w-full box-border"
+            placeholder="Type something here..."
+            @keydown="fetchData"
+          />
+          <button
+            @click="copyToClipboard"
+            class="p-2 hover:text-gray-300 transision cursor-pointer"
+          >
+            Copy
+          </button>
+        </label>
+        <textarea
+          :dir="result ? 'rtl' : 'ltr'"
+          class="textarea w-full mt-3"
+          placeholder="Results comes here"
+          x-model="result"
+        ></textarea>
+
+        <div class="toast" x-show="message">
+          <div class="alert alert-info">
+            <span
+              x-text="message"
+              class="overflow-hidden whitespace-nowrap text-ellipsis max-w-70"
+            ></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function clipboard() {
+        return {
+          text: "",
+          message: "",
+          result: "",
+
+          fetchData() {
+            // Construct the API URL with the current text
+            const apiUrl = `https://inputtools.google.com/request?text=${encodeURIComponent(this.text)}&itc=fa-t-i0&num=1`;
+            fetch(apiUrl)
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error("Network response was not ok");
+                }
+                return response.json();
+              })
+              .then((data) => {
+                // Assuming the API returns an array and we want the first result
+                if (data[0] == "SUCCESS" && data[1][0][1].length > 0) {
+                  this.result = data[1][0][1][0]; // Fill the input with the fetched data
+                } else {
+                  this.message = "No data found.";
+                  setTimeout(() => {
+                    this.message = "";
+                  }, 1000);
+                }
+              })
+              .catch((err) => {
+                console.error("Fetch error: ", err);
+                this.message = "Failed to fetch data.";
+                setTimeout(() => {
+                  this.message = "";
+                }, 1000);
+              });
+          },
+          copyToClipboard() {
+            navigator.clipboard
+              .writeText(this.result)
+              .then(() => {
+                this.message = "Text copied to clipboard: " + this.result;
+                setTimeout(() => {
+                  this.message = "";
+                }, 1000);
+              })
+              .catch((err) => {
+                console.error("Failed to copy: ", err);
+                this.message = "Failed to copy text.";
+                setTimeout(() => {
+                  this.message = "";
+                }, 1000);
+              });
+          },
+        };
+      }
+    </script>
+  </body>
+</html>
+
